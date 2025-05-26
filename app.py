@@ -13,6 +13,10 @@ def get_courses(year, semester):
 st.set_page_config(page_title="정현고 수강신청", layout="wide")
 st.title("정현고 수강신청")
 
+# ✅ secrets 확인용 디버그 코드
+st.subheader("Secrets 확인용 출력")
+st.code(st.secrets["GOOGLE_SHEETS_JSON"])
+
 with st.form("course_form"):
     name = st.text_input("학생 이름")
     student_id = st.text_input("학번")
