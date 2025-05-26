@@ -1,5 +1,5 @@
 # .gitignore
-course-registration-461012-cccf9c22b64b.json  # 로컬에서 실수로 올리지 않도록 방지
+course-registration-credentials.json  # 로컬에서 실수로 올리지 않도록 방지
 # Python 가상환경
 *.pem
 *.key
