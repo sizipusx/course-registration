@@ -22,3 +22,7 @@ sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
 
 # 5. 예시: 한 줄 추가
 sheet.append_row(["홍길동", "23001", "2", "1", "문학", "4", "학교지정"])
+
+if st.button("테스트로 한 줄 추가"):
+    sheet.append_row(["테스트", "00001", "2", "1", "문학", "4", "자율선택"])
+    st.success("스프레드시트에 한 줄 추가 성공!")
