@@ -1,28 +1,27 @@
-import streamlit as st
 import json
+import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-# 1. secrets에서 JSON 문자열을 로드
+# 1. secrets에서 JSON 문자열 로드
 json_key = json.loads(st.secrets["GOOGLE_SHEETS_JSON"])
 
-# 2. 인증 객체 생성
+# 2. 인증 범위 정의
 scope = [
     "https://spreadsheets.google.com/feeds",
     "https://www.googleapis.com/auth/drive"
 ]
-creds = ServiceAccountCredentials.from_json_keyfile_dict(json_key, scope)
 
-# 3. Google Sheets 클라이언트 생성
+# 3. 인증 객체 생성
+creds = ServiceAccountCredentials.from_json_keyfile_dict(json_key, scope)
 client = gspread.authorize(creds)
 
-# 4. 문서 열기 (문서 ID 사용)
-SPREADSHEET_KEY = "1veluylbgXdoQ1ZUz7_SnCByUS3PQPJPU1HpDKO2YEGE"  # 본인의 문서 ID로 바꿔야 함
+# 4. 시트 열기
+SPREADSHEET_KEY = "1veluylbgXdoQ1ZUz7_SnCByUS3PQPJPU1HpDKO2YEGE"
 sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
 
-# 5. 예시: 한 줄 추가
-sheet.append_row(["홍길동", "23001", "2", "1", "문학", "4", "학교지정"])
-
-if st.button("테스트로 한 줄 추가"):
-    sheet.append_row(["테스트", "00001", "2", "1", "문학", "4", "자율선택"])
-    st.success("스프레드시트에 한 줄 추가 성공!")
+# ✅ 5. 저장 함수만 정의 (app.py에서 호출됨)
+def append_to_sheet(name, student_id, courses):
+    for c in courses:
+        row = [name, student_id, c["year"], c["semester"], c["name"], c["hours"], c["group"]]
+        sheet.append_row(row)
