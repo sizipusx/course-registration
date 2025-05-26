@@ -1,6 +1,6 @@
 import json
 
-with open("credentials.json", encoding="utf-8") as f:
+with open("course-registration-461012-cccf9c22b64b.json", encoding="utf-8") as f:
     creds = json.load(f)
 
 # 핵심: private_key 줄바꿈 이스케이프
