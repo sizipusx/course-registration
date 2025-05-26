@@ -1,2 +1,19 @@
 # .gitignore
 course-registration-461012-cccf9c22b64b.json  # 로컬에서 실수로 올리지 않도록 방지
+# Python 가상환경
+*.pem
+*.key
+.env
+
+# 파이썬 캐시
+__pycache__/
+*.py[cod]
+
+# 시스템/IDE 파일
+.DS_Store
+.vscode/
+.idea/
+
+# PDF 결과물
+*.pdf
+
