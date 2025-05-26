@@ -1,14 +1,8 @@
-import gspread
+import json
+import streamlit as st
 from oauth2client.service_account import ServiceAccountCredentials
+import gspread
 
-SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-SPREADSHEET_KEY = "여기에-문서-고유-키-삽입"
-
-def append_to_sheet(name, student_id, courses):
-    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", SCOPE)
-    client = gspread.authorize(creds)
-    sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
-
-    for c in courses:
-        row = [name, student_id, c["year"], c["semester"], c["name"], c["hours"], c["group"]]
-        sheet.append_row(row)
+json_key = json.loads(st.secrets["GOOGLE_SHEETS_JSON"])
+creds = ServiceAccountCredentials.from_json_keyfile_dict(json_key, ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"])
+client = gspread.authorize(creds)
