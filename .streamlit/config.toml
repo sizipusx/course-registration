@@ -4,6 +4,7 @@
 headless = true
 enableCORS = false
 port = 8501
+enableXsrfProtection = false   # Public 환경에서 종종 권장됨
 
 [theme]
 base="light"
@@ -12,3 +13,6 @@ backgroundColor="#f8f9fa"
 secondaryBackgroundColor="#ffffff"
 textColor="#000000"
 font="sans serif"
+
+[browser]
+gatherUsageStats = false
