@@ -102,6 +102,86 @@ try:
     st.success("Google Sheets 인증 성공!")
 
     # (기존 스프레드시트 작업 코드)
+    # ▼▼▼ 여기에 아래의 데이터 쓰기 코드를 추가/수정합니다 ▼▼▼
+
+    # --- Google Sheets 데이터 쓰기 시작 ---
+    st.markdown("---") # 구분선
+    st.subheader("Google Sheets에 데이터 기록하기")
+
+    # 1. 대상 스프레드시트 및 워크시트 정보
+    # !!! 반드시 실제 값으로 변경해주세요 !!!
+    SPREADSHEET_ID = "1veluylbgXdoQ1ZUz7_SnCByUS3PQPJPU1HpDKO2YEGE"  # 예: "123abcDEF456ghiJKL789" (스프레드시트 URL의 일부)
+    WORKSHEET_NAME = "Sheet1"             # 데이터를 기록할 시트 이름 (기본값: "Sheet1")
+
+    try:
+        # 스프레드시트 열기 (ID 사용이 가장 안정적)
+        spreadsheet = gc.open_by_key(SPREADSHEET_ID)
+        # 또는 이름으로 열기: spreadsheet = gc.open("내 스프레드시트 제목")
+        # 또는 URL로 열기: spreadsheet = gc.open_by_url("https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID/...")
+        st.info(f"'{spreadsheet.title}' 스프레드시트를 열었습니다.")
+
+        # 워크시트 선택
+        try:
+            worksheet = spreadsheet.worksheet(WORKSHEET_NAME)
+            st.info(f"'{worksheet.title}' 워크시트를 선택했습니다.")
+        except gspread.exceptions.WorksheetNotFound:
+            st.warning(f"워크시트 '{WORKSHEET_NAME}'을(를) 찾을 수 없습니다. 새로 생성합니다.")
+            # 시트가 없으면 새로 만들 수도 있습니다. (필요에 따라 행/열 개수 지정)
+            worksheet = spreadsheet.add_worksheet(title=WORKSHEET_NAME, rows="100", cols="20")
+            st.info(f"새로운 워크시트 '{worksheet.title}'이(가) 생성되었습니다.")
+
+        # (선택 사항) 시트가 비어있으면 헤더 행 추가
+        if worksheet.row_count > 0 and not worksheet.get_all_values(): # 시트가 존재하지만 비어있는 경우
+            header_row = ["타임스탬프", "이름", "이메일", "메시지"] # 예시 헤더
+            worksheet.append_row(header_row)
+            st.caption("시트가 비어있어 헤더 행을 추가했습니다.")
+
+
+        # 2. Streamlit UI를 통해 사용자 입력 받기
+        st.markdown("#### 기록할 데이터 입력")
+        from datetime import datetime
+
+        # 입력 필드 구성
+        # (실제 앱에 필요한 필드로 수정하세요)
+        user_name = st.text_input("이름:", key="sheet_name")
+        user_email = st.text_input("이메일 (선택 사항):", key="sheet_email")
+        user_message = st.text_area("메시지:", key="sheet_message")
+
+        if st.button("Google Sheets에 데이터 기록", key="submit_to_sheet"):
+            if user_name and user_message:  # 필수 필드 확인
+                # 현재 시간 타임스탬프
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                
+                # 기록할 데이터 행 구성 (헤더 순서에 맞게)
+                new_row_data = [timestamp, user_name, user_email, user_message]
+                
+                # 시트에 새로운 행 추가
+                worksheet.append_row(new_row_data)
+                st.success(f"'{WORKSHEET_NAME}' 시트에 데이터가 성공적으로 기록되었습니다!")
+                st.balloons()
+
+                # (선택 사항) 입력 필드 초기화
+                # 이 부분은 Streamlit의 상태 관리 방식에 따라 다르게 구현될 수 있습니다.
+                # st.experimental_rerun() # 또는 각 위젯에 고유 key를 주고 session_state로 관리
+                
+            else:
+                st.warning("이름과 메시지를 모두 입력해주세요.")
+
+    except gspread.exceptions.SpreadsheetNotFound:
+        st.error(f"오류: 스프레드시트 ID '{SPREADSHEET_ID}'를 찾을 수 없습니다.")
+        st.error("스프레드시트 ID가 정확한지, 그리고 서비스 계정 이메일("
+                 f"`{creds_dict.get('client_email', '알 수 없음')}`"
+                 ")이 해당 스프레드시트에 '편집자'로 공유되었는지 확인해주세요.")
+    except Exception as e:
+        st.error(f"Google Sheets 작업 중 에러 발생: {e}")
+        st.error("API 할당량, 네트워크 문제 또는 권한 문제를 확인해보세요.")
+
+    # --- Google Sheets 데이터 쓰기 종료 ---
+
+# except Exception as e: # 바깥쪽 try-except 블록 (인증 에러 처리)
+#     st.error(f"Google Sheets 인증 또는 작업 중 에러 발생 (새로운 키): {e}")
+#     creds_dict_safe_to_log = {k: v for k, v in creds_dict.items() if k != "private_key"}
+#     st.error(f"사용된 Secrets 정보 (private_key 제외): {creds_dict_safe_to_log}")
 
 except Exception as e:
     st.error(f"Google Sheets 인증 또는 작업 중 에러 발생: {e}")
