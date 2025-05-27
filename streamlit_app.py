@@ -4,7 +4,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
 import json # courses.json 로드용
-from fpdf import FPDF # PDF 생성을 위한 라이브러리 (pip install fpdf2)
+from fpdf import FPDF, XPos, YPos # XPos, YPos 임포트 (DeprecationWarning 해결용)
 
 # --- 0. 설정값 및 상수 ---
 COURSES_JSON_PATH = 'courses.json' # Streamlit 앱과 같은 경로에 courses.json 파일이 있어야 함
@@ -113,77 +113,125 @@ def group_courses(courses_for_semester):
 
 
 # --- 3. PDF 생성 함수 (fpdf2 사용) ---
+# streamlit_app.py
+import streamlit as st
+import os
+from fpdf import FPDF, XPos, YPos # XPos, YPos 임포트 (DeprecationWarning 해결용)
+
 class PDF(FPDF):
-    def header(self):
-        # 한글 폰트 추가 (streamlit 앱과 같은 경로에 폰트 파일 필요)
-        # 예시: NanumGothic.ttf (streamlit 앱 실행 환경에 폰트 파일이 있어야 함)
-        # PDF 클래스 내 header 함수 또는 폰트 추가하는 부분
+    def __init__(self, orientation='P', unit='mm', format='A4'):
+        super().__init__(orientation, unit, format)
+        self._font_warning_shown = False # 폰트 경고 플래그 초기화
+        self._font_loaded_successfully = False
+        self._load_fonts() # 생성자에서 폰트 로드 시도
+
+    def _load_fonts(self):
+        """한글 폰트 (일반, 볼드)를 로드하고 등록합니다."""
         try:
-            # 현재 스크립트 파일의 디렉토리를 기준으로 폰트 파일 경로 설정
-            import os
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            font_path = os.path.join(current_dir, 'NanumSquare_acR.ttf') # 또는 사용하는 폰트 파일명
+            current_script_dir = os.path.dirname(os.path.abspath(__file__))
+            
+            # 일반(Regular) 폰트 파일명 및 경로
+            font_regular_name = 'NanumSquare_acR.ttf' # 사용하는 일반체 폰트 파일명
+            font_regular_path = os.path.join(current_script_dir, font_regular_name)
 
-            if not os.path.exists(font_path):
-                # 이 경고는 Streamlit 앱 실행 시 로그에만 나올 수 있습니다.
-                # 사용자에게 직접 보이지 않을 수 있으므로, Streamlit UI에 st.warning을 사용하는 것이 좋습니다.
-                print(f"WARNING: Font file not found at {font_path}")
-                # raise FileNotFoundError(f"TTF Font file not found: {font_path}") # 여기서 바로 에러를 발생시키기보다 아래 로직에서 처리
+            # 볼드(Bold) 폰트 파일명 및 경로 (실제 파일명으로 변경 필요)
+            font_bold_name = 'NanumSquare_acB.ttf' # 또는 NanumSquare_acEB.ttf 등
+            font_bold_path = os.path.join(current_script_dir, font_bold_name)
 
-            self.add_font('NanumSquare_acR', '', font_path, uni=True) # 경로를 font_path 변수로 전달
-            self.set_font('NanumSquare_acR', '', 12)
-        except RuntimeError as e: # add_font에서 파일 못찾으면 RuntimeError 발생 가능
-            self.set_font('Arial', '', 12)
-            if not hasattr(self, '_font_warning_shown'):
-                st.warning(f"PDF 생성: NanumSquare_acR 폰트 파일을 찾을 수 없거나 로드 중 오류({e}). 기본 폰트(Arial)를 사용합니다. 한글이 깨질 수 있습니다.")
+            if not os.path.exists(font_regular_path):
+                st.warning(f"PDF 경고: 일반 폰트 파일 '{font_regular_name}'을(를) 경로 '{font_regular_path}'에서 찾을 수 없습니다.")
+                raise FileNotFoundError(f"Regular font file not found: {font_regular_path}")
+            
+            if not os.path.exists(font_bold_path):
+                st.warning(f"PDF 경고: 볼드 폰트 파일 '{font_bold_name}'을(를) 경로 '{font_bold_path}'에서 찾을 수 없습니다.")
+                raise FileNotFoundError(f"Bold font file not found: {font_bold_path}")
+
+            # add_font 호출 (uni=True 제거)
+            self.add_font('NanumSquare_acR', '', font_regular_path) # 일반 스타일 (style='')
+            self.add_font('NanumSquare_acR', 'B', font_bold_path)   # 볼드 스타일 (style='B')
+            # 필요하다면 이탤릭(I), 볼드이탤릭(BI)도 같은 방식으로 추가
+            
+            self._font_loaded_successfully = True # 폰트 로드 성공 플래그
+            if hasattr(self, '_font_warning_shown'):
+                delattr(self, '_font_warning_shown')
+
+
+        except (FileNotFoundError, RuntimeError) as e:
+            if not self._font_warning_shown:
+                st.warning(f"PDF 생성 경고: 한글 폰트 로드 중 오류 발생 ({type(e).__name__}: {e}). 기본 영문 폰트(Arial)를 사용합니다. PDF에서 한글이 올바르게 표시되지 않을 수 있습니다.")
                 self._font_warning_shown = True
-        except FileNotFoundError as e: # os.path.exists 등으로 미리 체크했다면 이 부분은 덜 필요할 수 있음
-            self.set_font('Arial', '', 12)
-            if not hasattr(self, '_font_warning_shown'):
-                st.warning(f"PDF 생성: 지정된 경로에 NanumSquare_acR 폰트 파일이 없습니다({e}). 기본 폰트(Arial)를 사용합니다.")
-                self._font_warning_shown = True
+            self._font_loaded_successfully = False
 
-            self.cell(0, 10, '수강신청 내역서', 0, 1, 'C')
-            self.ln(5)
+    def _set_font_with_fallback(self, family, style='', size=10):
+        """폰트 로드 성공 여부에 따라 폰트를 설정하거나 Arial로 대체합니다."""
+        if self._font_loaded_successfully and family == 'NanumSquare_acR':
+            try:
+                self.set_font(family, style, size)
+            except RuntimeError: # 혹시 모를 set_font 오류 시 Arial로 대체
+                self.set_font('Arial', style, size)
+        else: # NanumSquare_acR이 아니거나 로드 실패 시 Arial 사용
+            self.set_font('Arial', style, size)
+
+
+    def header(self):
+        self._set_font_with_fallback('NanumSquare_acR', '', 12) # 폰트 설정 (일반체)
+        self.cell(0, 10, '수강신청 내역서', new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='C')
+        self.ln(5)
 
     def footer(self):
         self.set_y(-15)
-        try:
-            self.set_font('NanumSquare_acR', '', 8)
-        except RuntimeError:
-            self.set_font('Arial', '', 8)
-        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
+        self._set_font_with_fallback('NanumSquare_acR', '', 8)
+        self.cell(0, 10, f'Page {self.page_no()}', align='C') # ln 제거
 
     def chapter_title(self, title):
-        try:
-            self.set_font('NanumSquare_acR', 'B', 12)
-        except RuntimeError:
-            self.set_font('Arial', 'B', 12)
-        self.cell(0, 10, title, 0, 1, 'L')
+        self._set_font_with_fallback('NanumSquare_acR', 'B', 12) # 폰트 설정 (볼드체)
+        self.cell(0, 10, title, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='L')
         self.ln(2)
 
-    def chapter_body(self, data_list): # data_list는 (과목명, 학점) 튜플의 리스트
-        try:
-            self.set_font('NanumSquare_acR', '', 10)
-        except RuntimeError:
-            self.set_font('Arial', '', 10)
-
-        col_widths = [self.w - 20 - 20 - 20, 20] # 과목명, 학점
+    def chapter_body(self, data_list):
+        self._set_font_with_fallback('NanumSquare_acR', '', 10)
+        
+        col_widths = [self.w - self.l_margin - self.r_margin - 20, 20] # 좌우 여백 고려
         self.set_fill_color(200, 220, 255)
-        self.cell(col_widths[0], 7, "과목명", 1, 0, 'C', True)
-        self.cell(col_widths[1], 7, "학점", 1, 1, 'C', True)
+        self.cell(col_widths[0], 7, "과목명", border=1, new_x=XPos.RIGHT, new_y=YPos.TOP, align='C', fill=True)
+        self.cell(col_widths[1], 7, "학점", border=1, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='C', fill=True)
 
         total_hours_semester = 0
         for item_name, item_hours in data_list:
-            self.cell(col_widths[0], 6, str(item_name), 1)
-            self.cell(col_widths[1], 6, str(item_hours), 1, 0, 'R')
-            self.ln()
+            self.cell(col_widths[0], 6, str(item_name), border=1, new_x=XPos.RIGHT, new_y=YPos.TOP)
+            self.cell(col_widths[1], 6, str(item_hours), border=1, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='R')
             total_hours_semester += item_hours
         
-        self.set_font_size(10)
-        self.cell(col_widths[0], 7, "학기 총 학점:", 1, 0, 'R')
-        self.cell(col_widths[1], 7, str(total_hours_semester), 1, 1, 'R')
+        self.set_font_size(10) # _set_font_with_fallback 사용 안 함 (스타일 변경 없으므로)
+        self.cell(col_widths[0], 7, "학기 총 학점:", border=1, new_x=XPos.RIGHT, new_y=YPos.TOP, align='R')
+        self.cell(col_widths[1], 7, str(total_hours_semester), border=1, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='R')
         return total_hours_semester
+
+# --- generate_pdf_bytes 함수 수정 (DeprecationWarning 반영) ---
+def generate_pdf_bytes(student_name, student_id, selected_courses_details_by_semester):
+    pdf = PDF() # PDF 인스턴스 생성 시 _load_fonts 호출됨
+    pdf.add_page()
+    
+    pdf._set_font_with_fallback('NanumSquare_acR', '', 11) # 일반체로 기본 설정
+
+    pdf.cell(0, 10, f"학생 이름: {student_name}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.cell(0, 10, f"학번: {student_id}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.ln(5)
+
+    overall_total_hours = 0
+    for semester_key, courses in selected_courses_details_by_semester.items():
+        year, semester = int(semester_key[1]), int(semester_key[3])
+        if courses:
+            pdf.chapter_title(f"{year}학년 {semester}학기 선택과목") # 여기서 NanumSquare_acR 볼드 사용
+            semester_data = [(c['name'], c['hours']) for c in courses]
+            overall_total_hours += pdf.chapter_body(semester_data)
+            pdf.ln(5)
+    
+    pdf.ln(5)
+    pdf._set_font_with_fallback('NanumSquare_acR', 'B', 11) # 볼드체로 설정
+    pdf.cell(0, 10, f"전체 총 선택 학점: {overall_total_hours}", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='R')
+
+    return pdf.output(dest='S').encode('latin-1')
 
 def generate_pdf_bytes(student_name, student_id, selected_courses_details_by_semester):
     pdf = PDF()
