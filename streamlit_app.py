@@ -114,8 +114,15 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 def get_gspread_client():
     """Google Sheets API 클라이언트를 반환합니다."""
     try:
-        creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
+        creds = Credentials.from_service_account_info(
+        creds_dict,
+        scopes=[
+            'https://www.googleapis.com/auth/spreadsheets',
+            'https://www.googleapis.com/auth/drive.file'
+        ]
+    )
         client = gspread.authorize(creds)
+        st.success("Google Sheets 인증 성공!")
         return client
     except Exception as e:
         st.error(f"Google Sheets 인증 중 오류 발생: {e}")
