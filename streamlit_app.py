@@ -143,8 +143,8 @@ class PDF(FPDF):
                 st.warning(f"PDF 생성: 지정된 경로에 NanumGothic 폰트 파일이 없습니다({e}). 기본 폰트(Arial)를 사용합니다.")
                 self._font_warning_shown = True
 
-        self.cell(0, 10, '수강신청 내역서', 0, 1, 'C')
-        self.ln(5)
+            self.cell(0, 10, '수강신청 내역서', 0, 1, 'C')
+            self.ln(5)
 
     def footer(self):
         self.set_y(-15)
