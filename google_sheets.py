@@ -1,19 +1,12 @@
-import json
 import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-# 1. secrets에서 JSON 문자열 로드
-json_key = json.loads(st.secrets["GOOGLE_SHEETS_JSON"])
-
-# 2. 인증 범위 정의
-scope = [
-    "https://spreadsheets.google.com/feeds",
-    "https://www.googleapis.com/auth/drive"
-]
-
-# 3. 인증 객체 생성
-creds = ServiceAccountCredentials.from_json_keyfile_dict(json_key, scope)
+# st.secrets["google_sheets"] 는 이미 dict 타입으로 넘어옵니다.
+creds = ServiceAccountCredentials.from_json_keyfile_dict(
+    st.secrets["google_sheets"],
+    scopes=["https://www.googleapis.com/auth/spreadsheets"]
+)
 client = gspread.authorize(creds)
 
 # 4. 시트 열기
