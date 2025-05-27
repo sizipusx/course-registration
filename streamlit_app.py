@@ -122,7 +122,7 @@ class PDF(FPDF):
             # 현재 스크립트 파일의 디렉토리를 기준으로 폰트 파일 경로 설정
             import os
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            font_path = os.path.join(current_dir, 'NanumGothic.ttf') # 또는 사용하는 폰트 파일명
+            font_path = os.path.join(current_dir, 'NanumSquare_acR.ttf') # 또는 사용하는 폰트 파일명
 
             if not os.path.exists(font_path):
                 # 이 경고는 Streamlit 앱 실행 시 로그에만 나올 수 있습니다.
@@ -130,17 +130,17 @@ class PDF(FPDF):
                 print(f"WARNING: Font file not found at {font_path}")
                 # raise FileNotFoundError(f"TTF Font file not found: {font_path}") # 여기서 바로 에러를 발생시키기보다 아래 로직에서 처리
 
-            self.add_font('NanumGothic', '', font_path, uni=True) # 경로를 font_path 변수로 전달
-            self.set_font('NanumGothic', '', 12)
+            self.add_font('NanumSquare_acR', '', font_path, uni=True) # 경로를 font_path 변수로 전달
+            self.set_font('NanumSquare_acR', '', 12)
         except RuntimeError as e: # add_font에서 파일 못찾으면 RuntimeError 발생 가능
             self.set_font('Arial', '', 12)
             if not hasattr(self, '_font_warning_shown'):
-                st.warning(f"PDF 생성: NanumGothic 폰트 파일을 찾을 수 없거나 로드 중 오류({e}). 기본 폰트(Arial)를 사용합니다. 한글이 깨질 수 있습니다.")
+                st.warning(f"PDF 생성: NanumSquare_acR 폰트 파일을 찾을 수 없거나 로드 중 오류({e}). 기본 폰트(Arial)를 사용합니다. 한글이 깨질 수 있습니다.")
                 self._font_warning_shown = True
         except FileNotFoundError as e: # os.path.exists 등으로 미리 체크했다면 이 부분은 덜 필요할 수 있음
             self.set_font('Arial', '', 12)
             if not hasattr(self, '_font_warning_shown'):
-                st.warning(f"PDF 생성: 지정된 경로에 NanumGothic 폰트 파일이 없습니다({e}). 기본 폰트(Arial)를 사용합니다.")
+                st.warning(f"PDF 생성: 지정된 경로에 NanumSquare_acR 폰트 파일이 없습니다({e}). 기본 폰트(Arial)를 사용합니다.")
                 self._font_warning_shown = True
 
             self.cell(0, 10, '수강신청 내역서', 0, 1, 'C')
@@ -149,14 +149,14 @@ class PDF(FPDF):
     def footer(self):
         self.set_y(-15)
         try:
-            self.set_font('NanumGothic', '', 8)
+            self.set_font('NanumSquare_acR', '', 8)
         except RuntimeError:
             self.set_font('Arial', '', 8)
         self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
 
     def chapter_title(self, title):
         try:
-            self.set_font('NanumGothic', 'B', 12)
+            self.set_font('NanumSquare_acR', 'B', 12)
         except RuntimeError:
             self.set_font('Arial', 'B', 12)
         self.cell(0, 10, title, 0, 1, 'L')
@@ -164,7 +164,7 @@ class PDF(FPDF):
 
     def chapter_body(self, data_list): # data_list는 (과목명, 학점) 튜플의 리스트
         try:
-            self.set_font('NanumGothic', '', 10)
+            self.set_font('NanumSquare_acR', '', 10)
         except RuntimeError:
             self.set_font('Arial', '', 10)
 
@@ -190,7 +190,7 @@ def generate_pdf_bytes(student_name, student_id, selected_courses_details_by_sem
     pdf.add_page()
     
     try:
-        pdf.set_font('NanumGothic', '', 11)
+        pdf.set_font('NanumSquare_acR', '', 11)
     except RuntimeError:
         pdf.set_font('Arial', '', 11)
 
@@ -209,7 +209,7 @@ def generate_pdf_bytes(student_name, student_id, selected_courses_details_by_sem
     
     pdf.ln(5)
     try:
-        pdf.set_font('NanumGothic', 'B', 11)
+        pdf.set_font('NanumSquare_acR', 'B', 11)
     except RuntimeError:
         pdf.set_font('Arial', 'B', 11)
     pdf.cell(0, 10, f"전체 총 선택 학점: {overall_total_hours}", 0, 1, 'R')
