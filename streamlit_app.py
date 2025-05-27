@@ -108,7 +108,7 @@ WORKSHEET_NAME = "Sheet1" # 예: CourseSubmissions (선택 사항, 없으면 기
 #     st.caption("Secrets에는 `gcp_service_account` 섹션과 `SPREADSHEET_NAME` 키가 반드시 포함되어야 합니다.")
 #     st.stop() # 중요한 설정이 없으면 앱 중단
 
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+# SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 @st.cache_resource(ttl=600) # 10분 동안 인증 객체 캐싱
 def get_gspread_client():
