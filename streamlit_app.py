@@ -29,7 +29,7 @@ try:
     # 수정 가능하도록 .to_dict() 또는 deepcopy 사용 (st.secrets는 불변일 수 있음)
     creds_dict = creds_dict_original.to_dict()
 
-    SPREADSHEET_NAME = "1veluylbgXdoQ1ZUz7_SnCByUS3PQPJPU1HpDKO2YEGE"
+    SPREADSHEET_NAME = "수강신청결과"
     WORKSHEET_NAME = "Sheet1" # 예: CourseSubmissions (선택 사항, 없으면 기본값 사용)
 
 except KeyError as e:
