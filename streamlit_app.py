@@ -5,6 +5,7 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime
 import json # courses.json 로드용
 from fpdf import FPDF, XPos, YPos # XPos, YPos 임포트 (DeprecationWarning 해결용)
+import os
 
 # --- 0. 설정값 및 상수 ---
 COURSES_JSON_PATH = 'courses.json' # Streamlit 앱과 같은 경로에 courses.json 파일이 있어야 함
