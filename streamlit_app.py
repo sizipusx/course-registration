@@ -31,6 +31,7 @@ try:
 
     SPREADSHEET_NAME = "수강신청결과"
     WORKSHEET_NAME = "Sheet1" # 예: CourseSubmissions (선택 사항, 없으면 기본값 사용)
+    spreadsheet_id ="1veluylbgXdoQ1ZUz7_SnCByUS3PQPJPU1HpDKO2YEGE"
 
 except KeyError as e:
     st.error(f"Streamlit Secrets 설정 오류: '{e}' 키를 찾을 수 없습니다. Secrets 설정을 확인해주세요.")
@@ -60,7 +61,8 @@ def get_worksheet(_client): # 파라미터 이름 변경하여 내부 변수와 
     if not _client:
         return None
     try:
-        spreadsheet = _client.open(SPREADSHEET_NAME)
+        # spreadsheet = _client.open(SPREADSHEET_NAME)
+        spreadsheet = _client.open_by_key(spreadsheet_id)
         try:
             worksheet = spreadsheet.worksheet(WORKSHEET_NAME)
         except gspread.exceptions.WorksheetNotFound:
