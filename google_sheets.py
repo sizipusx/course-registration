@@ -1,47 +1,48 @@
 import streamlit as st
-from google.oauth2 import service_account
+import gspread
+from google.oauth2.service_account import Credentials # gspread 5.x+ 에서는 Credentials 객체 직접 사용 가능
 
-# 1) Streamlit Secrets에서 매핑을 가져와 일반 dict로 복사
-raw_map = st.secrets["google_sheets"]
-info = dict(raw_map)
+# st.secrets에서 google_sheets 섹션 전체를 가져옵니다.
+creds_dict = st.secrets["google_sheets"]
 
-# 2) 원본 private_key 로깅 (Cloud Logs에서 실제 문자열을 확인해 보세요)
-# import logging
-# logging.error("PRIVATE_KEY repr: %r", raw_map["private_key"][:200])
+# gspread 5.x 이상 버전
+try:
+    # Credentials 객체 생성
+    creds = Credentials.from_service_account_info(
+        creds_dict,
+        scopes=[
+            'https://www.googleapis.com/auth/spreadsheets',
+            'https://www.googleapis.com/auth/drive.file' # 필요시 drive scope 추가
+        ]
+    )
+    # gspread 클라이언트 인증
+    gc = gspread.authorize(creds)
 
-# 3) PEM 포맷 재조립
-raw_key = raw_map["private_key"]
-#  - strip()으로 앞뒤 공백·개행 제거
-#  - splitlines()로 행별 분리
-#  - 빈 줄/공백 줄은 제거하고, 각 행도 strip()
-lines = [
-    line.strip()
-    for line in raw_key.strip().splitlines()
-    if line.strip()
-]
+    # 또는 gspread.service_account_from_dict(creds_dict) 직접 사용 (scopes 명시 불가)
+    # gc = gspread.service_account_from_dict(creds_dict) # 이 경우 기본 scope 사용
 
-#  - 맨 앞·뒤 라인이 헤더·푸터인지 검증 (로그로 확인 가능)
-assert lines[0] == "-----BEGIN PRIVATE KEY-----", "헤더가 없습니다"
-assert lines[-1] == "-----END PRIVATE KEY-----", "푸터가 없습니다"
+    st.success("Google Sheets 인증 성공!")
 
-#  - 재조립: 각 행을 '\n'으로 합치고, 마지막에 개행 한 번 추가
-fixed_pem = "\n".join(lines) + "\n"
-info["private_key"] = fixed_pem
+    # 예시: 특정 스프레드시트 열고 데이터 쓰기
+    spreadsheet_id = "YOUR_SPREADSHEET_ID" # 실제 스프레드시트 ID로 변경
+    # 또는 스프레드시트 URL
+    # spreadsheet_url = "https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID/edit#gid=0"
 
-# 4) 인증 객체 생성
-creds = service_account.Credentials.from_service_account_info(
-    info,
-    scopes=["https://www.googleapis.com/auth/spreadsheets"]
-)
-# 5) Google Sheets API 클라이언트 생성
-from gspread import Client   
 
-#4. 시트 열기
-SPREADSHEET_KEY = "1veluylbgXdoQ1ZUz7_SnCByUS3PQPJPU1HpDKO2YEGE"
-sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
+    # worksheet_name = "Sheet1" # 실제 시트 이름으로 변경
 
-# ✅ 5. 저장 함수만 정의 (app.py에서 호출됨)
-def append_to_sheet(name, student_id, courses):
-    for c in courses:
-        row = [name, student_id, c["year"], c["semester"], c["name"], c["hours"], c["group"]]
-        sheet.append_row(row)
+    # # ID로 열기
+    # sh = gc.open_by_key(spreadsheet_id)
+    # # URL로 열기
+    # # sh = gc.open_by_url(spreadsheet_url)
+    # # 이름으로 열기 (느릴 수 있음)
+    # # sh = gc.open(spreadsheet_name) # 스프레드시트 파일 이름
+
+    # worksheet = sh.worksheet(worksheet_name)
+    # worksheet.append_row(["이름", "나이", "도시"])
+    # worksheet.append_row(["홍길동", 30, "서울"])
+    # st.write("데이터가 성공적으로 기록되었습니다.")
+
+except Exception as e:
+    st.error(f"Google Sheets 인증 또는 작업 중 에러 발생: {e}")
+    st.error(f"Secrets 내용 확인: {st.secrets['google_sheets']}") # 디버깅용
