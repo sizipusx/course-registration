@@ -117,13 +117,30 @@ class PDF(FPDF):
     def header(self):
         # 한글 폰트 추가 (streamlit 앱과 같은 경로에 폰트 파일 필요)
         # 예시: NanumGothic.ttf (streamlit 앱 실행 환경에 폰트 파일이 있어야 함)
+        # PDF 클래스 내 header 함수 또는 폰트 추가하는 부분
         try:
-            self.add_font('NanumGothic', '', 'NanumGothic.ttf', uni=True)
+            # 현재 스크립트 파일의 디렉토리를 기준으로 폰트 파일 경로 설정
+            import os
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            font_path = os.path.join(current_dir, 'NanumGothic.ttf') # 또는 사용하는 폰트 파일명
+
+            if not os.path.exists(font_path):
+                # 이 경고는 Streamlit 앱 실행 시 로그에만 나올 수 있습니다.
+                # 사용자에게 직접 보이지 않을 수 있으므로, Streamlit UI에 st.warning을 사용하는 것이 좋습니다.
+                print(f"WARNING: Font file not found at {font_path}")
+                # raise FileNotFoundError(f"TTF Font file not found: {font_path}") # 여기서 바로 에러를 발생시키기보다 아래 로직에서 처리
+
+            self.add_font('NanumGothic', '', font_path, uni=True) # 경로를 font_path 변수로 전달
             self.set_font('NanumGothic', '', 12)
-        except RuntimeError:
-            self.set_font('Arial', '', 12) # 폰트 로드 실패 시 Arial 사용
-            if not hasattr(self, '_font_warning_shown'): # 경고 메시지 한 번만 표시
-                st.warning("PDF 생성: NanumGothic 폰트를 찾을 수 없어 기본 폰트(Arial)를 사용합니다. 한글이 깨질 수 있습니다.")
+        except RuntimeError as e: # add_font에서 파일 못찾으면 RuntimeError 발생 가능
+            self.set_font('Arial', '', 12)
+            if not hasattr(self, '_font_warning_shown'):
+                st.warning(f"PDF 생성: NanumGothic 폰트 파일을 찾을 수 없거나 로드 중 오류({e}). 기본 폰트(Arial)를 사용합니다. 한글이 깨질 수 있습니다.")
+                self._font_warning_shown = True
+        except FileNotFoundError as e: # os.path.exists 등으로 미리 체크했다면 이 부분은 덜 필요할 수 있음
+            self.set_font('Arial', '', 12)
+            if not hasattr(self, '_font_warning_shown'):
+                st.warning(f"PDF 생성: 지정된 경로에 NanumGothic 폰트 파일이 없습니다({e}). 기본 폰트(Arial)를 사용합니다.")
                 self._font_warning_shown = True
 
         self.cell(0, 10, '수강신청 내역서', 0, 1, 'C')
